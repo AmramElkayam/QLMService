@@ -4,6 +4,11 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+using System.Net.Http.Headers;
+
 
 namespace QLMService
 {
@@ -11,11 +16,16 @@ namespace QLMService
     public class QLMSyncService : IQLMSyncService
     {
         System.Timers.Timer timer = new System.Timers.Timer();
+        HttpClient clientWorker;
+        NetworkScheduler scheduler;
+      
 
         public void OnStart()
         {
-            
-            timer.Interval = 10000; // 10 seconds
+            clientWorker = new HttpClient();
+            scheduler = new NetworkScheduler();
+
+            timer.Interval = 20000; // 10 seconds
             timer.Elapsed += new System.Timers.ElapsedEventHandler(this.OnTimer);
             timer.Start();
             
@@ -23,10 +33,18 @@ namespace QLMService
 
         }
 
+        static string _address = "http://api.worldbank.org/countries?format=json";
+
         public void OnTimer(object sender, System.Timers.ElapsedEventArgs args)
         {
             // TODO: Insert monitoring activities here.
            Console.WriteLine("Monitoring the System");
+
+
+           List<string> result =  scheduler.RunClient(_address);
+           Console.WriteLine("result count = " + result.Count);
+           
+
         }
 
 
@@ -34,6 +52,8 @@ namespace QLMService
         {
             timer.Stop();
             timer.Close();
+            clientWorker.Dispose();
+            scheduler.Dispose();
 
         }
 
@@ -41,8 +61,15 @@ namespace QLMService
 
         public List<string> getVersions(long lastSync, string project)
         {
-            throw new NotImplementedException();
+
+
+            return null;
         }
+
+
+
+
+
 
         public void addVersions(List<string> lverInfo)
         {
@@ -103,5 +130,14 @@ namespace QLMService
         {
             throw new NotImplementedException();
         }
+
+
+
+
+      
+
+
+
+
     }
 }

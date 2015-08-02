@@ -15,15 +15,7 @@ namespace Host
             {
                 host.Open();
                 Console.WriteLine("Host started @ " + DateTime.Now.ToString());
-
-
-                QLMService.QLMSyncService client = new QLMService.QLMSyncService();
-
-                client.OnStart();
-
-
                 Console.ReadLine();
-                client.OnStop();
                 host.Close();
 
             }
