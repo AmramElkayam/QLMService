@@ -16,10 +16,9 @@ namespace QLMService
 
       
         LimitedConcurrencyLevelTaskScheduler lcts;
-        List<Task> tasks = new List<Task>();
         TaskFactory factory;
         CancellationTokenSource cts;
-        readonly Object lockObj = new Object();
+        HttpClient httpClient;
     
         public NetworkScheduler()
         {
@@ -28,6 +27,7 @@ namespace QLMService
             // Create a TaskFactory and pass it our custom scheduler. 
             factory = new TaskFactory(lcts);
             cts = new CancellationTokenSource();
+            httpClient = new HttpClient();
 
         }
 
@@ -38,61 +38,29 @@ namespace QLMService
         {
             
             List<string> result = new List<string>();
-
-           
-                // Create an HttpClient instance
-                HttpClient client = new HttpClient();
+            httpClient.DefaultRequestHeaders.Accept.Clear();
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            try
+            {
                 // Send a request asynchronously and continue when complete
-                client.GetAsync(address).ContinueWith(
-                    (getTask) =>
-                    {
-                        if (getTask.IsCanceled)
-                        {
-                            return;
-                        }
-                        if (getTask.IsFaulted)
-                        {
-                            throw getTask.Exception;
-                        }
-                        HttpResponseMessage response = getTask.Result;
+                HttpResponseMessage response = httpClient.GetAsync(address).GetAwaiter().GetResult();
 
-                        try
-                        {
-                            // Check that response was successful or throw exception
-                            response.EnsureSuccessStatusCode();
+                // Check that response was successful or throw exception
+                response.EnsureSuccessStatusCode();
 
-                            // Read response asynchronously as JToken and write out top facts for each country
-                            response.Content.ReadAsAsync<JArray>().ContinueWith(
-                                (contentTask) =>
-                                {
-                                    if (contentTask.IsCanceled)
-                                    {
-                                        return;
-                                    }
-                                    if (contentTask.IsFaulted)
-                                    {
-                                        throw contentTask.Exception;
-                                    }
+                JArray content = JArray.Parse(response.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 
-                                    JArray content = contentTask.Result;
+                foreach (var country in content[1])
+                {
+                    result.Add(country.ToString());
+                }
 
-                                    foreach (var country in content[1])
-                                    {
-
-                                        result.Add(country.ToString());
-                                    }
-                                    
-
-                                });
-                        }
-                        catch (HttpRequestException e)
-                        {
-                            // Handle exception.
-
-                            Console.WriteLine("exception!!!");
-                        }
-                    });
-            
+                          
+            }
+            catch (HttpRequestException e)
+            {
+                // Handle exception.
+            }
 
             return result;
         }
@@ -104,9 +72,10 @@ namespace QLMService
         {
 
             Task t = factory.StartNew(() => DoPostWork(address, jsonContent), cts.Token);
-            tasks.Add(t); // ???
-
+          
         }
+
+
 
         private static async void DoPostWork(string address, string jsonContent) 
         {
@@ -129,9 +98,6 @@ namespace QLMService
                     // Check that response was successful or throw exception
                     response.EnsureSuccessStatusCode();
 
-                    if (response.IsSuccessStatusCode)
-                    {
-                    }
                 }
                 catch (HttpRequestException e)
                 {
@@ -156,7 +122,8 @@ namespace QLMService
                 cts.Dispose();
             }
 
-            tasks.Clear();
+            httpClient.Dispose();
+
         }
 
 

@@ -12,8 +12,8 @@ namespace QLMService
     public interface IQLMSyncService
     {
         
-        void OnStart();
-        void OnStop();
+       
+        void Dispose();
 
         [OperationContract]
         List<string> getVersions(long lastSync,string project);
