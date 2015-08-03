@@ -14,6 +14,7 @@ namespace QLMService
         
         void OnStart();
         void OnStop();
+        
 
         [OperationContract]
         List<string> getVersions(long lastSync,string project);

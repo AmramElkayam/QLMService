@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http;
-using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 
@@ -31,6 +30,27 @@ namespace QLMService
 
         }
 
+
+
+
+
+        public  List<string> GetAsync(string uri)
+        {
+
+            List<string> result = new List<string>();
+            HttpClient httpClient = new HttpClient();
+            string contentStr = httpClient.GetStringAsync(uri).GetAwaiter().GetResult();
+            
+            JArray content = JArray.Parse(contentStr);
+            foreach (var country in content[1])
+            {
+
+                result.Add(country.ToString());
+            }
+
+
+            return result;
+        }
 
 
 
@@ -62,7 +82,7 @@ namespace QLMService
                             response.EnsureSuccessStatusCode();
 
                             // Read response asynchronously as JToken and write out top facts for each country
-                            response.Content.ReadAsAsync<JArray>().ContinueWith(
+                            response.Content.ReadAsStringAsync().ContinueWith(
                                 (contentTask) =>
                                 {
                                     if (contentTask.IsCanceled)
@@ -74,13 +94,16 @@ namespace QLMService
                                         throw contentTask.Exception;
                                     }
 
-                                    JArray content = contentTask.Result;
+                                    JArray content = JArray.Parse(contentTask.Result);
+
 
                                     foreach (var country in content[1])
                                     {
 
                                         result.Add(country.ToString());
                                     }
+
+                                    if (result.Count > 0) Console.WriteLine(result.ElementAt(0));
                                     
 
                                 });

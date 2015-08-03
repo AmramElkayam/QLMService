@@ -15,7 +15,7 @@ namespace QLMService
     // NOTE: You can use the "Rename" command on the "Refactor" menu to change the class name "QLMSyncService" in both code and config file together.
     public class QLMSyncService : IQLMSyncService
     {
-        System.Timers.Timer timer = new System.Timers.Timer();
+       
         HttpClient clientWorker;
         NetworkScheduler scheduler;
       
@@ -25,33 +25,14 @@ namespace QLMService
             clientWorker = new HttpClient();
             scheduler = new NetworkScheduler();
 
-            timer.Interval = 20000; // 10 seconds
-            timer.Elapsed += new System.Timers.ElapsedEventHandler(this.OnTimer);
-            timer.Start();
-            
-
-
         }
 
         static string _address = "http://api.worldbank.org/countries?format=json";
 
-        public void OnTimer(object sender, System.Timers.ElapsedEventArgs args)
-        {
-            // TODO: Insert monitoring activities here.
-           Console.WriteLine("Monitoring the System");
-
-
-           List<string> result =  scheduler.RunClient(_address);
-           Console.WriteLine("result count = " + result.Count);
-           
-
-        }
-
+        
 
         public void OnStop()
         {
-            timer.Stop();
-            timer.Close();
             clientWorker.Dispose();
             scheduler.Dispose();
 
@@ -59,11 +40,14 @@ namespace QLMService
 
 
 
-        public List<string> getVersions(long lastSync, string project)
+        public  List<string> getVersions(long lastSync, string project)
         {
 
+            List<string> result =  scheduler.GetAsync(_address);
 
-            return null;
+
+            return result;
+
         }
 
 
