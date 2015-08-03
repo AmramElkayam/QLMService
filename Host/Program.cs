@@ -34,6 +34,7 @@ namespace Host
 
             }
 
+
             timer.Stop();
             timer.Close();
             client.Dispose();
